@@ -1,0 +1,10 @@
+.DS_Store
+*.log
+/tmp/
+node_modules/
+# scratch HOME used for install dry-runs
+/.scratch-home/
+# settings backups produced by install.sh (if ever run inside the repo)
+settings.json.bak.*
+# skill-development eval fixtures must not ship (contain machine paths, not runtime resources)
+plugins/*/skills/*/evals/

@@ -1,0 +1,18 @@
+{
+  "marketplaces": [
+    { "name": "claude-plugins-official", "source": "anthropics/claude-plugins-official" }
+  ],
+  "plugins": [
+    "frontend-design@claude-plugins-official",
+    "superpowers@claude-plugins-official",
+    "code-review@claude-plugins-official",
+    "skill-creator@claude-plugins-official",
+    "claude-code-setup@claude-plugins-official",
+    "code-simplifier@claude-plugins-official",
+    "claude-md-management@claude-plugins-official",
+    "feature-dev@claude-plugins-official",
+    "typescript-lsp@claude-plugins-official",
+    "ralph-loop@claude-plugins-official",
+    "commit-commands@claude-plugins-official"
+  ]
+}
