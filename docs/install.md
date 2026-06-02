@@ -3,6 +3,53 @@
 How to reconstruct your full Claude tooling layer on a new machine or in a Claude
 **cloud session** — and how the disposable/regenerated model works in practice.
 
+## Which script, and when? — `install.sh` vs `export.sh`
+
+The two scripts move data in **opposite directions**. Choose by *which side owns the
+truth* on the environment you're in.
+
+| | `bootstrap/install.sh` | `scripts/export.sh` |
+|---|---|---|
+| **Direction** | repo → `~/.claude` (writes/overwrites the working copy) | `~/.claude` → repo (reads live state up) |
+| **Who is authoritative** | the **repo** — it overwrites/merges into `~/.claude` | your **machine** — the repo just mirrors it |
+| **Use it for** | cloud sessions; Claude-only local machines | multi-vendor local machines that only want cloud sessions to match |
+
+### Use `install.sh` when…
+
+- **You're in a Claude cloud session — always.** Cloud `~/.claude` is ephemeral and
+  Claude is the only agent there, so the repo *should* be authoritative. This is what
+  the cloud Setup script runs (see [`cloud-setup.md`](./cloud-setup.md)).
+- **Your local machine runs Claude Code and no other AI agent.** Then `~/.claude` can
+  safely be a regenerated working copy of the repo — exactly the model the Prime
+  Directive in `CLAUDE.md` assumes.
+
+> ⚠️ **Do not run `install.sh` locally if you run more than one AI agent (e.g. Claude
+> *and* Cursor) and share one global skill store across them.** `install.sh` copies
+> skills, agents, hooks, and merged settings *into* `~/.claude`. If `~/.claude/skills`
+> is (or symlinks into) your shared global store, install.sh overwrites or shadows it
+> with the repo's snapshot — **destroying the single source of truth on your machine**:
+> the repo silently wins over the store you actually edit from, and your other vendors
+> drift. On a multi-vendor machine your *local* store is the source of truth and the
+> repo is downstream of it. Use `export.sh` instead (next).
+
+### Use `export.sh` when…
+
+- **You run more than one AI agent, centralize your skills in one store on the machine
+  and symlink that store into each vendor (Claude, Cursor, …), and you only want Claude
+  *cloud* sessions to carry the same skills.**
+
+  Here the **machine — not the repo — is the source of truth.** `export.sh` reads your
+  live `~/.claude` state *up into the repo*; you commit and push; then **cloud** sessions
+  (which *do* run `install.sh`) come up with the same skills. Your local `~/.claude` is
+  never overwritten, so the central store you share with Cursor stays intact.
+
+- It's also the right tool any time you hand-edited something in `~/.claude` while
+  prototyping and want the repo to catch up before committing (the "local-first"
+  workflow in `CLAUDE.md`).
+
+**In one line:** cloud and Claude-only-local → `install.sh`. Multi-vendor local that
+just needs cloud parity → `export.sh`, **and never `install.sh` locally.**
+
 ## Prerequisites
 
 - Claude Code installed.
@@ -87,17 +134,32 @@ See `docs/architecture.md` for the full three-bucket model.
 - **Your own content:** push to the repo, then `/plugin update jiechao-toolkit`
   on each machine.
 - **Third-party set or settings:** edit `bootstrap/*`, then re-run `install.sh`.
-- **Pull latest from another machine:** `git pull` then re-run `install.sh`.
+- **Pull latest from another machine:** `git pull`, then re-run `install.sh`.
+
+(The two `install.sh` steps above assume a repo-authoritative environment — cloud, or a
+Claude-only machine. On a multi-vendor local machine, don't run `install.sh`; sync the
+other way with `export.sh` — see [Which script, and when?](#which-script-and-when--installsh-vs-exportsh).)
 
 ## Keeping the repo truthful — `scripts/export.sh`
 
-If you ever change tooling directly in `~/.claude` (e.g. quick local prototyping),
-run:
+This is the **machine → repo** direction (see [Which script, and when?](#which-script-and-when--installsh-vs-exportsh)
+above). Reach for it when your *local* `~/.claude` is the source of truth — a
+multi-vendor machine that only needs cloud parity, or after quick local prototyping —
+and you want the repo to catch up so a push propagates to cloud sessions.
 
 ```bash
 ./scripts/export.sh
 ```
 
 It re-copies your *own* `skills/`, `agents/`, `hooks/` from `~/.claude` into Layer A
-and regenerates `manifest.json` / `skills.lock.json` from current local state.
-Review the diff and commit so the repo stays canonical.
+(re-tokenizing hook paths as `@@HOOKS_DIR@@`) and regenerates
+`skills.lock.json` / `settings.snippet.json` / `statusline.sh` from current local
+state. Review the diff and commit so the repo stays canonical, then push — that's what
+carries the state to cloud, where `install.sh` reapplies it.
+
+> **Caveat for symlinked stores.** `export.sh` treats a **symlinked** skill folder
+> under `~/.claude/skills` as third-party and **skips** it (it only copies real
+> directories). So if you centralize skills elsewhere and symlink them *into*
+> `~/.claude/skills`, point your real store at `~/.claude/skills` (and symlink *out*
+> to the other vendors), or export won't pick your own skills up. If your layout is the
+> reverse, the export step that captures owner-authored skills needs adjusting — flag it.
