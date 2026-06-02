@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-plugin",
+  "description": "jiechao personal single source of truth — authored skills",
+  "owner": { "name": "jiechao", "email": "jiechao.lim@gmail.com" },
+  "plugins": [
+    {
+      "name": "jiechao-toolkit",
+      "source": "./plugins/jiechao-toolkit",
+      "description": "Personal authored skills (ansi-color-piping, cross-platform-tests, ink-useinput-bind, no-barrel-files, package-public-api, ssr-client-divergence, tailwind-css-v4-usage, validating-stale-worktrees, vertical-code-structure)",
+      "category": "productivity"
+    }
+  ]
+}

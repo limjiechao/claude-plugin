@@ -1,0 +1,19 @@
+{
+  "extraKnownMarketplaces": {
+    "claude-plugin": { "source": { "source": "github", "repo": "limjiechao/claude-plugin" } }
+  },
+  "enabledPlugins": { "jiechao-toolkit@claude-plugin": true },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"$CLAUDE_CODE_REMOTE\" = true ] || exit 0; REPO=\"$HOME/claude-plugin\"; [ -d \"$REPO/.git\" ] || git clone https://github.com/limjiechao/claude-plugin.git \"$REPO\" || exit 0; \"$REPO/bootstrap/session-sync.sh\" || true"
+          }
+        ]
+      }
+    ]
+  }
+}
