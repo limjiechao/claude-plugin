@@ -19,7 +19,7 @@ if [ -d "$REPO/.git" ]; then
 else
   git clone https://github.com/limjiechao/claude-plugin.git "$REPO"
 fi
-"$REPO/bootstrap/install.sh"
+"$REPO/bootstrap/apply.sh"
 ```
 
 That's it — full tooling (plugin + third-party plugins + skills + agents + guard hooks
@@ -29,7 +29,7 @@ credential, or per-repo config is required.
 ## Good to know
 
 - **`~/.claude` doesn't carry over** between cloud environments, which is exactly why the
-  Setup script runs `install.sh` to (re)apply it.
+  Setup script runs `apply.sh` to (re)apply it.
 - **The Setup script runs once per environment creation**, then the filesystem is cached
   (~7 days). Later sessions in that environment already have everything; it just won't
   pick up repo *updates* until the cache expires or you re-run. To always get the latest,
@@ -92,7 +92,7 @@ add a `SessionStart` hook that runs [`../bootstrap/session-sync.sh`](../bootstra
 | Situation | Detected via | Action |
 |---|---|---|
 | Nothing changed since last apply | `ls-remote` == marker | **exit immediately** (one quick remote query, no install) |
-| You pushed new commits | differ | fetch + ff-merge + `install.sh`, record new SHA |
+| You pushed new commits | differ | fetch + ff-merge + `apply.sh`, record new SHA |
 | Brand-new environment (marker absent) | differ (empty marker) | install once, record SHA |
 | Offline / remote unreachable | falls back to local SHA | skip; session still starts |
 

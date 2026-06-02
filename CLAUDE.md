@@ -20,14 +20,14 @@ next rebuild.
   here** — plugin subagents ignore `hooks`/`permissionMode`/`mcpServers`.
 - **Layer B — `bootstrap/`**: *declarations* of content installed *from others*
   (third-party plugins + skills), *portable settings*, **and the owner's subagents +
-  guard hooks** (delivered into `~/.claude` by `install.sh`, where their security
-  fields are honored). Reconstructed by `bootstrap/install.sh`. Third-party code is
+  guard hooks** (delivered into `~/.claude` by `apply.sh`, where their security
+  fields are honored). Reconstructed by `bootstrap/apply.sh`. Third-party code is
   **referenced, never vendored**.
 
 ## Invariants (do not violate)
 
 1. **No absolute user paths in committed files.** An agent's hook path uses the
-   `@@HOOKS_DIR@@` token (`install.sh` rewrites it to `$HOME/.claude/hooks`), e.g.
+   `@@HOOKS_DIR@@` token (`apply.sh` rewrites it to `$HOME/.claude/hooks`), e.g.
    `command: "@@HOOKS_DIR@@/git-guard.sh"`, never `/Users/jiechao/...`. Inside the
    plugin (`.mcp.json`/`plugin.json` only), `${CLAUDE_PLUGIN_ROOT}` is the analogous
    variable — but it does NOT work in agent frontmatter.
@@ -38,7 +38,7 @@ next rebuild.
 4. **Never put runtime/account state in the repo** (`history.jsonl`, `projects/`,
    `sessions/`, `daemon*`, `telemetry/`, auth/credentials). See the three-bucket
    model in `docs/architecture.md`.
-5. **`install.sh` must stay idempotent** (`set -euo pipefail`, skip already-installed,
+5. **`apply.sh` must stay idempotent** (`set -euo pipefail`, skip already-installed,
    back up before merge). Safe to run repeatedly, including at cloud-session start.
 6. **statusLine is centralized here.** It lives in `bootstrap/statusline.sh` +
    `bootstrap/settings.snippet.json`; do not let machines diverge.
@@ -53,32 +53,32 @@ Is it something the owner authored?
 │   ├── MCP   → Layer A: plugins/jiechao-toolkit/.mcp.json  (use ${CLAUDE_PLUGIN_ROOT})
 │   │            then: push → /plugin update jiechao-toolkit
 │   ├── agent → Layer B: bootstrap/agents/<name>.md  (hook paths use @@HOOKS_DIR@@)
-│   │            then: ./bootstrap/install.sh → commit
+│   │            then: ./bootstrap/apply.sh → commit
 │   └── hook  → Layer B: bootstrap/hooks/<name>.sh  (ref as @@HOOKS_DIR@@/<name>.sh)
-│                then: ./bootstrap/install.sh → commit
+│                then: ./bootstrap/apply.sh → commit
 └── NO (installed from someone else) → Layer B: bootstrap/
           plugin  → add to manifest.json
           skill   → add to skills.lock.json  (source repo + skillPath)
           MCP     → ships inside a third-party plugin (add that plugin)
-          then: ./bootstrap/install.sh → commit
+          then: ./bootstrap/apply.sh → commit
 ```
 
 Settings/permissions/statusline changes → edit `bootstrap/settings.snippet.json`
-(or `statusline.sh`) → `./bootstrap/install.sh` → commit.
+(or `statusline.sh`) → `./bootstrap/apply.sh` → commit.
 
-Full procedures with examples: **`docs/adding-tools.md`**.
+Full procedures with examples: **`docs/updating-plugin.md`**.
 
 ## Two valid workflows
 
 - **Repo-first (preferred):** create the file in the repo → push → refresh
-  (`/plugin update` for Layer A, `install.sh` for Layer B).
+  (`/plugin update` for Layer A, `apply.sh` for Layer B).
 - **Local-first (prototyping):** the owner adds it in `~/.claude` → run
-  `scripts/export.sh` to pull live state into the repo → commit/push. Always run
-  `export.sh` before committing if `~/.claude` was hand-touched, so nothing is lost.
+  `scripts/capture.sh` to pull live state into the repo → commit/push. Always run
+  `capture.sh` before committing if `~/.claude` was hand-touched, so nothing is lost.
 
 ## When asked to "sync" or "I added X locally"
 
-Run `scripts/export.sh`. It re-copies the owner's own skills into the plugin and the
+Run `scripts/capture.sh`. It re-copies the owner's own skills into the plugin and the
 agents/hooks into `bootstrap/` (re-tokenizing hook paths), and regenerates
 `skills.lock.json` + `settings.snippet.json` + `statusline.sh` from current local
 state. Then review the diff and commit.
@@ -87,13 +87,13 @@ state. Then review the diff and commit.
 
 - `marketplace.json` and `plugin.json` parse and match the Claude plugin schema.
 - No absolute user paths introduced (`grep -r '/Users/' --include='*.json' --include='*.md' --include='*.sh'` should only match docs/examples).
-- If you touched `install.sh`, dry-run it against a scratch `HOME` — never against
+- If you touched `apply.sh`, dry-run it against a scratch `HOME` — never against
   the real `~/.claude` during development.
 
 ## Pointers
 
 - Architecture & buckets → `docs/architecture.md`
-- Adding tools (the common task) → `docs/adding-tools.md`
-- Install / rebuild → `docs/install.md`
+- Adding tools (the common task) → `docs/updating-plugin.md`
+- Install / rebuild → `docs/local-setup.md`
 - Auto-apply in Claude cloud sessions → `docs/cloud-setup.md`
 - Design record → `docs/superpowers/specs/2026-06-02-claude-plugin-source-of-truth-design.md`

@@ -56,10 +56,10 @@ bootstrap/
 ├── statusline.sh          # centralized statusline script
 ├── agents/<name>.md       # 6 subagents (hook paths tokenized as @@HOOKS_DIR@@)
 ├── hooks/<name>.sh        # 4 guard scripts (git/path/runner/shell)
-└── install.sh             # idempotent installer + settings merge
+└── apply.sh               # idempotent rebuild + settings merge
 ```
 
-`install.sh` (idempotent; `SKIP_PLUGINS=1` / `SKIP_SKILLS=1` opt-outs):
+`apply.sh` (idempotent; `SKIP_PLUGINS=1` / `SKIP_SKILLS=1` opt-outs):
 1. adds the own marketplace (this repo, by local path — no GitHub slug needed) and
    installs `jiechao-toolkit`, then adds declared marketplaces + installs the 11
    plugins, all via the non-interactive `claude plugin` CLI (skips if present);
@@ -77,7 +77,7 @@ bootstrap/
 
 **Portability rule for agent hook paths:** in the repo, an agent's hook command is
 stored as `@@HOOKS_DIR@@/git-guard.sh` (never an absolute `/Users/...` path);
-`install.sh` rewrites the token at install time. (`${CLAUDE_PLUGIN_ROOT}` is the
+`apply.sh` rewrites the token at install time. (`${CLAUDE_PLUGIN_ROOT}` is the
 analogous variable, but it is **not** reliably expanded in agent frontmatter and is
 moot here since agents are not shipped via the plugin.)
 
@@ -89,7 +89,7 @@ Everything on a machine falls into one of three buckets. This is what makes
 | Bucket | What | Where it lives | Lifecycle |
 |---|---|---|---|
 | ✅ **Maintained** | own skills (plugin), own agents+hooks (bootstrap), third-party manifest, portable settings | **this repo** | hand-edited, version-controlled |
-| ♻️ **Generated** | installed plugin cache, third-party skills, copied agents+hooks, merged `settings.json` keys, `statusline.sh` | `~/.claude/` | disposable; rebuilt by `install.sh` / `/plugin install` |
+| ♻️ **Generated** | installed plugin cache, third-party skills, copied agents+hooks, merged `settings.json` keys, `statusline.sh` | `~/.claude/` | disposable; rebuilt by `apply.sh` / `/plugin install` |
 | ⛔ **Runtime/account** | `history.jsonl`, `projects/`, `sessions/`, `daemon*`, `telemetry/`, `ide/`, `shell-snapshots/`, `file-history/`, `plans/`, `tasks/`, auth/credentials | `~/.claude/` | **never** in repo; **never** deleted |
 
 Implication: you may clear the **Generated** bucket anytime (e.g. stale third-party
@@ -105,7 +105,7 @@ are *merged* from the repo (Generated).
 | Public repo | No secrets; references (doesn't vendor) third-party content; cloud sessions clone it with no auth. |
 | Reference, not vendor | Upstream updates, no fork rot, no licensing exposure. |
 | One plugin (not many) | Simplest single unit to enable/disable; can split later if needed. |
-| `install.sh` clones skills directly | Works in a bare cloud sandbox with no pre-installed skill manager. |
+| `apply.sh` clones skills directly | Works in a bare cloud sandbox with no pre-installed skill manager. |
 | Agents/hooks via bootstrap, not plugin | Plugin subagents ignore `hooks`/`permissionMode`/`mcpServers`; user-scope agents honor them. |
 | statusLine centralized | Explicit owner requirement — no per-machine drift. |
 | Personal MCP via plugin `.mcp.json`; third-party MCP via plugins | Personal MCP travels with the plugin; third-party MCP already ships inside plugins. |
