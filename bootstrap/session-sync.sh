@@ -25,4 +25,4 @@ applied_sha="$(cat "$APPLIED" 2>/dev/null || true)"
 
 # Fresh commits (or never applied in this environment): sync + reinstall, record SHA.
 git -C "$REPO" fetch --quiet origin main && git -C "$REPO" merge --ff-only origin/main || true
-"$REPO/bootstrap/install.sh" && git -C "$REPO" rev-parse HEAD > "$APPLIED"
+"$REPO/bootstrap/apply.sh" && git -C "$REPO" rev-parse HEAD > "$APPLIED"
