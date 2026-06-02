@@ -5,13 +5,23 @@ repo**, then propagates. Never hand-add to `~/.claude` as the source of truth.
 
 ## The one rule, two directions
 
-- **Repo-first (preferred):** create the file in this repo → push → refresh.
-- **Local-first (prototyping):** add it in `~/.claude` → run `scripts/export.sh`
-  to pull it into the repo → commit/push.
+Everything lands in **this repo first**; the live `~/.claude` is a working copy that
+gets *refreshed* from it. Which direction you move depends on **which side owns the
+truth** — the full decision (and when **not** to run `install.sh` locally) lives in
+[`install.md`](./install.md#which-script-and-when--installsh-vs-exportsh):
 
-Refresh commands:
-- **Layer A (your own plugin):** `/plugin update jiechao-toolkit`
-- **Layer B (third-party + settings):** `./bootstrap/install.sh`
+- **Repo-first (preferred) — repo is authoritative.** Create the file in this repo →
+  push → **refresh down** into `~/.claude`:
+  - **Layer A (your own plugin):** `/plugin update jiechao-toolkit`
+  - **Layer B (third-party + settings):** `./bootstrap/install.sh`
+- **Local-first (prototyping, or a multi-vendor machine) — your machine is
+  authoritative.** Add it in `~/.claude` → run `scripts/export.sh` to **read it up**
+  into the repo → commit/push. The repo just mirrors your live state.
+
+> ⚠️ On a machine that runs other AI agents and shares one skill store, only ever go
+> **up** with `export.sh` — running `install.sh` there overwrites that shared store
+> with the repo's snapshot, destroying your local source of truth. See the decision
+> table in [`install.md`](./install.md#which-script-and-when--installsh-vs-exportsh).
 
 > Tip: while developing Layer A locally, add the marketplace from the **local path**
 > (`/plugin marketplace add ./` from the repo root) so your edits are live without a
@@ -70,6 +80,12 @@ Then `./bootstrap/install.sh` (clones the repo, copies the skill folder into
 **Install-then-export (local-first):** install the skill however you discovered it
 (e.g. the find-skills workflow), then run `./scripts/export.sh`, which regenerates
 `skills.lock.json` from your live state. Review the diff, commit.
+
+> ⚠️ `export.sh` only captures skill folders that are **real directories** under
+> `~/.claude/skills`; a **symlinked** skill is treated as third-party and **skipped**,
+> so it won't land in `skills.lock.json`. If you centralize skills and symlink them in,
+> use the declare-then-install path above instead. (Same caveat as in
+> [`install.md`](./install.md#keeping-the-repo-truthful--scriptsexportsh).)
 
 ### 1c. A third-party MCP server
 
