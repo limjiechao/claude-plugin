@@ -90,18 +90,36 @@ cp "$BOOT/statusline.sh" "$CLAUDE_DIR/statusline.sh"; chmod +x "$CLAUDE_DIR/stat
 # 7) Settings: back up, then deep-merge the snippet (repoint statusLine to absolute path).
 SETTINGS="$CLAUDE_DIR/settings.json"
 [ -f "$SETTINGS" ] && cp "$SETTINGS" "$SETTINGS.bak.$(date +%Y%m%d%H%M%S)" && log "backed up settings.json"
-SNIPPET="$BOOT/settings.snippet.json" SETTINGS_PATH="$SETTINGS" CLAUDE_DIR="$CLAUDE_DIR" python3 - <<'PY'
+SNIPPET="$BOOT/settings.snippet.json" SETTINGS_PATH="$SETTINGS" CLAUDE_DIR="$CLAUDE_DIR" HOOKS_DIR="$HOOKS_DIR" python3 - <<'PY'
 import json, os
-settings_path=os.environ["SETTINGS_PATH"]; claude_dir=os.environ["CLAUDE_DIR"]
+settings_path=os.environ["SETTINGS_PATH"]; claude_dir=os.environ["CLAUDE_DIR"]; hooks_dir=os.environ["HOOKS_DIR"]
 base=json.load(open(settings_path)) if os.path.exists(settings_path) else {}
 snip=json.load(open(os.environ["SNIPPET"]))
+def replace_tokens(value):
+    if isinstance(value, str):
+        return value.replace("@@HOOKS_DIR@@", hooks_dir).replace("@@CLAUDE_DIR@@", claude_dir)
+    if isinstance(value, list):
+        return [replace_tokens(item) for item in value]
+    if isinstance(value, dict):
+        return {key: replace_tokens(item) for key, item in value.items()}
+    return value
+def merge_lists(existing, incoming):
+    seen=set()
+    merged=[]
+    for item in existing + incoming:
+        key=json.dumps(item, sort_keys=True)
+        if key not in seen:
+            seen.add(key)
+            merged.append(item)
+    return merged
 def deep_merge(a,b):
     for k,v in b.items():
         if isinstance(v,dict) and isinstance(a.get(k),dict): deep_merge(a[k],v)
         elif isinstance(v,list) and isinstance(a.get(k),list):
-            a[k]=list(dict.fromkeys(a[k]+v))   # dedupe-preserving union
+            a[k]=merge_lists(a[k],v)   # dedupe-preserving union
         else: a[k]=v
     return a
+snip=replace_tokens(snip)
 merged=deep_merge(base, snip)
 merged["statusLine"]={"type":"command","command":f"bash {claude_dir}/statusline.sh"}
 json.dump(merged, open(settings_path,"w"), indent=2)
