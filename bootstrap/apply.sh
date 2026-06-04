@@ -21,12 +21,17 @@ mkdir -p "$HOOKS_DIR" "$SKILLS_DIR" "$AGENTS_DIR"
 SKIP_PLUGINS="${SKIP_PLUGINS:-0}"
 SKIP_SKILLS="${SKIP_SKILLS:-0}"
 
-# 1) Own plugin: add this repo as a marketplace (local path → no GitHub slug needed) + install.
+# 1) Own plugin: add this repo as a marketplace (local path → no GitHub slug needed) + install/update.
 if [ "$SKIP_PLUGINS" != 1 ] && command -v claude >/dev/null; then
   log "registering own marketplace (local path)"
   claude plugin marketplace add "$REPO_ROOT" 2>/dev/null || log "  marketplace already known"
-  log "installing jiechao-toolkit"
-  claude plugin install "jiechao-toolkit@claude-plugin" 2>/dev/null || log "  already installed"
+  if claude plugin details "jiechao-toolkit@claude-plugin" >/dev/null 2>&1; then
+    log "updating jiechao-toolkit"
+    claude plugin update "jiechao-toolkit@claude-plugin" 2>/dev/null || log "  update FAILED"
+  else
+    log "installing jiechao-toolkit"
+    claude plugin install "jiechao-toolkit@claude-plugin" 2>/dev/null || log "  install FAILED"
+  fi
 
   # 2) Third-party marketplaces + plugins from manifest.json.
   while IFS=$'\t' read -r name src; do
