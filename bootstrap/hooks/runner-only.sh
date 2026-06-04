@@ -12,8 +12,9 @@
 #             runner or a read-only filter (grep, awk, sed, tail, head, …), so
 #             legitimate pipes like `pnpm test | tail` are permitted.
 # Note: $(...) and backtick command substitution is an inherent bypass this hook
-# cannot handle (the substituted command never appears as a pipeline head) — no
-# attempt is made to block `$(`.
+# cannot fully inspect (the substituted command never appears as a pipeline
+# head). Rather than silently allow it under dontAsk, its presence now triggers
+# an `ask` decision for explicit confirmation.
 set -euo pipefail
 allowed_str="$*"
 allowed=()
@@ -24,6 +25,12 @@ for a in "$@"; do
   if [ "$mode" = allowed ]; then allowed+=("$a"); else ask_runners+=("$a"); fi
 done
 cmd="$(jq -r '.tool_input.command // ""')"
+
+# Command substitution is an inherent bypass (the substituted command never
+# appears as a pipeline head). We can't inspect it, so require confirmation
+# rather than silently allowing under dontAsk.
+subst_ask=false
+if printf '%s' "$cmd" | grep -Eq '\$\(|`'; then subst_ask=true; fi
 
 # `in_list <needle> <items...>` — true if needle matches an item. The `:+`
 # expansions keep this safe under `set -u` with empty arrays (macOS bash 3.2).
@@ -75,8 +82,9 @@ for statement in $(echo "$cmd" | sed -E 's/(&&|\|\||;)/\n/g'); do
   done
 done
 
-if $needs_ask; then
-  # A prompt-list runner (e.g. pip3) is present — require explicit confirmation.
+if $needs_ask || $subst_ask; then
+  # A prompt-list runner (e.g. pip3) or command substitution is present —
+  # require explicit confirmation.
   jq -n --arg r "runner-only: command uses a runner that requires confirmation" '{
     hookSpecificOutput: {
       hookEventName: "PreToolUse",

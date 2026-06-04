@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # PreToolUse hook for the `shell` agent.
-# The shell agent may read and write freely; this only blocks catastrophic
-# or system-altering commands.
+# The shell agent may read and write freely; this blocks catastrophic or
+# system-altering commands AND secret reads / env dumps (kept in parity with the
+# settings deny-list, because this hook's explicit `allow` would otherwise
+# override those settings rules).
 set -euo pipefail
 cmd="$(jq -r '.tool_input.command // ""')"
 
@@ -31,6 +33,12 @@ deny_patterns=(
   '(curl|wget)[[:space:]]+[^|&;]*(-T|--upload-file)'                                        # file upload (exfiltration)
   '(curl|wget)[^|&;]*--data[^[:space:]]*[[:space:]]*@'                                      # POST data-from-file (long flag)
   '(curl|wget)[^|&;]*[[:space:]]-d[[:space:]]*@'                                            # POST data-from-file (short flag)
+
+  # Secret-file reads (settings deny-list parity; this hook's allow would
+  # otherwise override those settings rules for the shell agent).
+  '(cat|head|tail|less|more|bat|xxd|od|strings)[[:space:]]+[^|&;]*(\.env([^a-zA-Z]|$)|\.pem|id_rsa|id_ed25519|\.ssh/|\.aws/|\.gnupg/|credentials|secrets|\.netrc|_history)'
+  # Environment dumps (common exfil source).
+  '(^|[;&|][[:space:]]*)(env|printenv|set)([[:space:]]|$)'
 )
 for p in "${deny_patterns[@]}"; do
   if grep -Eq "$p" <<<"$cmd"; then
