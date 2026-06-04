@@ -18,6 +18,8 @@ SKILLS_DIR="$CLAUDE_DIR/skills"
 AGENTS_DIR="$CLAUDE_DIR/agents"
 MARKETPLACE="claude-plugin"
 PLUGIN="jiechao-toolkit"
+PLUGIN_SOURCE="$REPO_ROOT/plugins/$PLUGIN"
+OWN_PLUGIN_FAILED=0
 log(){ printf '\033[1;34m[apply]\033[0m %s\n' "$*"; }
 
 command -v jq >/dev/null       || { echo "jq required"; exit 1; }
@@ -45,15 +47,24 @@ if [ "$SKIP_PLUGINS" != 1 ] && command -v claude >/dev/null; then
   log "registering own marketplace (local path)"
   claude plugin marketplace add "$REPO_ROOT" 2>/dev/null || log "  marketplace already known"
   log "refreshing own marketplace"
-  claude plugin marketplace update "$MARKETPLACE" || log "  marketplace refresh FAILED"
+  if ! claude plugin marketplace update "$MARKETPLACE"; then
+    log "  marketplace refresh FAILED"
+    OWN_PLUGIN_FAILED=1
+  fi
 
   # After a cache bust the plugin is gone, so prefer install; otherwise update.
   if claude plugin details "$PLUGIN@$MARKETPLACE" >/dev/null 2>&1; then
     log "updating $PLUGIN"
-    claude plugin update "$PLUGIN@$MARKETPLACE" || log "  update FAILED"
+    if ! claude plugin update "$PLUGIN@$MARKETPLACE"; then
+      log "  update FAILED"
+      OWN_PLUGIN_FAILED=1
+    fi
   else
     log "installing $PLUGIN"
-    claude plugin install "$PLUGIN@$MARKETPLACE" || log "  install FAILED"
+    if ! claude plugin install "$PLUGIN@$MARKETPLACE"; then
+      log "  install FAILED"
+      OWN_PLUGIN_FAILED=1
+    fi
   fi
 
   # Verify the cache actually reflects source. The CLI's exit code can't be
@@ -61,10 +72,10 @@ if [ "$SKIP_PLUGINS" != 1 ] && command -v claude >/dev/null; then
   cachedir="$CLAUDE_DIR/plugins/cache/$MARKETPLACE/$PLUGIN"
   if [ -d "$cachedir" ]; then
     latest="$(ls -1t "$cachedir" 2>/dev/null | head -n1)"
-    if [ -n "$latest" ] && ! diff -rq "$REPO_ROOT" "$cachedir/$latest" \
+    if [ -n "$latest" ] && ! diff -rq "$PLUGIN_SOURCE" "$cachedir/$latest" \
          --exclude=.git --exclude=node_modules >/dev/null 2>&1; then
       log "  WARN: cached plugin ($latest) DIFFERS from source — cache may be stale."
-      log "        inspect: diff -rq \"$REPO_ROOT\" \"$cachedir/$latest\" --exclude=.git"
+      log "        inspect: diff -rq \"$PLUGIN_SOURCE\" \"$cachedir/$latest\" --exclude=.git"
       log "        if intentional drift, ignore; otherwise rerun with REFRESH_PLUGIN_CACHE=1"
     fi
   fi
@@ -139,58 +150,17 @@ SETTINGS="$CLAUDE_DIR/settings.json"
 LASTSNIP="$CLAUDE_DIR/.jiechao-last-snippet.json"
 if [ -f "$SETTINGS" ]; then
   cp "$SETTINGS" "$SETTINGS.bak.$(date +%Y%m%d%H%M%S)" && log "backed up settings.json"
-  ls -1t "$SETTINGS".bak.* 2>/dev/null | tail -n +6 | xargs -r rm -f
+  while IFS= read -r old_backup; do
+    [ -n "$old_backup" ] || continue
+    rm -f "$old_backup"
+  done < <(ls -1t "$SETTINGS".bak.* 2>/dev/null | sed '1,5d')
 fi
 SNIPPET="$BOOT/settings.snippet.json" SETTINGS_PATH="$SETTINGS" LASTSNIP="$LASTSNIP" \
-CLAUDE_DIR="$CLAUDE_DIR" HOOKS_DIR="$HOOKS_DIR" python3 - <<'PY'
-import json, os
-settings_path=os.environ["SETTINGS_PATH"]
-claude_dir=os.environ["CLAUDE_DIR"]; hooks_dir=os.environ["HOOKS_DIR"]
-lastsnip_path=os.environ["LASTSNIP"]
+CLAUDE_DIR="$CLAUDE_DIR" HOOKS_DIR="$HOOKS_DIR" python3 "$BOOT/settings_reconcile.py"
 
-base = json.load(open(settings_path)) if os.path.exists(settings_path) else {}
-new_snip = json.load(open(os.environ["SNIPPET"]))
-old_snip = json.load(open(lastsnip_path)) if os.path.exists(lastsnip_path) else {}
-
-def replace_tokens(v):
-    if isinstance(v, str):
-        return v.replace("@@HOOKS_DIR@@", hooks_dir).replace("@@CLAUDE_DIR@@", claude_dir)
-    if isinstance(v, list):  return [replace_tokens(x) for x in v]
-    if isinstance(v, dict):  return {k: replace_tokens(x) for k, x in v.items()}
-    return v
-
-new_snip = replace_tokens(new_snip)
-old_snip = replace_tokens(old_snip)
-
-def key(item): return json.dumps(item, sort_keys=True)
-
-def reconcile_list(existing, old_entries, new_entries):
-    stale = {key(x) for x in old_entries} - {key(x) for x in new_entries}
-    kept  = [x for x in existing if key(x) not in stale]
-    seen, out = set(), []
-    for x in kept + new_entries:
-        k = key(x)
-        if k not in seen:
-            seen.add(k); out.append(x)
-    return out
-
-def reconcile(base_node, old_node, new_node):
-    for k, v in new_node.items():
-        ov = old_node.get(k) if isinstance(old_node, dict) else None
-        if isinstance(v, dict) and isinstance(base_node.get(k), dict):
-            reconcile(base_node[k], ov if isinstance(ov, dict) else {}, v)
-        elif isinstance(v, list) and isinstance(base_node.get(k), list):
-            base_node[k] = reconcile_list(base_node[k], ov if isinstance(ov, list) else [], v)
-        else:
-            base_node[k] = v
-    return base_node
-
-merged = reconcile(base, old_snip, new_snip)
-merged["statusLine"] = {"type": "command", "command": f"bash {claude_dir}/statusline.sh"}
-
-json.dump(merged, open(settings_path, "w"), indent=2)
-json.dump(json.load(open(os.environ["SNIPPET"])), open(lastsnip_path, "w"), indent=2)
-print("settings reconciled ->", settings_path)
-PY
+if [ "$OWN_PLUGIN_FAILED" = 1 ]; then
+  log "own plugin refresh failed; leaving session-sync marker untouched"
+  exit 1
+fi
 
 log "done. Restart Claude Code to load plugins."

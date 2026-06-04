@@ -65,9 +65,11 @@ This README is the doorman. Read the docs in this order; each has exactly one jo
    machine; the `apply.sh` vs `capture.sh` decision.
 4. **[`docs/cloud-setup.md`](./docs/cloud-setup.md)** — auto-apply this repo in Claude
    cloud sessions (Setup script, session hook).
-5. **[`docs/updating-plugin.md`](./docs/updating-plugin.md)** — how to add any tool type
+5. **[`docs/testing.md`](./docs/testing.md)** — unit-test commands for bootstrap
+   changes.
+6. **[`docs/updating-plugin.md`](./docs/updating-plugin.md)** — how to add any tool type
    later (skill, agent, hook, MCP, third-party).
-6. **[`docs/superpowers/specs/…-design.md`](./docs/superpowers/specs/2026-06-02-claude-plugin-source-of-truth-design.md)**
+7. **[`docs/superpowers/specs/…-design.md`](./docs/superpowers/specs/2026-06-02-claude-plugin-source-of-truth-design.md)**
    — the approved design record (archival).
 
 ## Repository layout
