@@ -25,6 +25,8 @@ SKIP_SKILLS="${SKIP_SKILLS:-0}"
 if [ "$SKIP_PLUGINS" != 1 ] && command -v claude >/dev/null; then
   log "registering own marketplace (local path)"
   claude plugin marketplace add "$REPO_ROOT" 2>/dev/null || log "  marketplace already known"
+  log "refreshing own marketplace"
+  claude plugin marketplace update "claude-plugin" 2>/dev/null || log "  marketplace refresh FAILED"
   if claude plugin details "jiechao-toolkit@claude-plugin" >/dev/null 2>&1; then
     log "updating jiechao-toolkit"
     claude plugin update "jiechao-toolkit@claude-plugin" 2>/dev/null || log "  update FAILED"

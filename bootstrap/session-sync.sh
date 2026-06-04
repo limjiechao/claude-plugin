@@ -24,5 +24,6 @@ applied_sha="$(cat "$APPLIED" 2>/dev/null || true)"
 [ "$remote_sha" = "$applied_sha" ] && exit 0
 
 # Fresh commits (or never applied in this environment): sync + reinstall, record SHA.
-git -C "$REPO" fetch --quiet origin main && git -C "$REPO" merge --ff-only origin/main || true
+# Plugin releases are discovered from tags, so fetch them with the branch update.
+git -C "$REPO" fetch --quiet --tags origin main && git -C "$REPO" merge --ff-only origin/main || true
 "$REPO/bootstrap/apply.sh" && git -C "$REPO" rev-parse HEAD > "$APPLIED"
