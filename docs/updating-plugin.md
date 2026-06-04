@@ -112,6 +112,21 @@ comment so you can update it.
 > ignore the `hooks`/`permissionMode`/`mcpServers` fields (see
 > [architecture.md](./architecture.md)).
 
+> **When to bump `plugins/jiechao-toolkit/.claude-plugin/plugin.json` `version`:**
+> only when the plugin's *distributed content* changes — a skill under `skills/`
+> or the personal `.mcp.json`. That `version` is the signal that tells other
+> machines a `/plugin update jiechao-toolkit` has something new to pull; bumping
+> it without a content change just re-installs byte-identical skills.
+> Do **not** bump it for things that don't ship inside the plugin: Layer B edits
+> (agents, hooks, settings, third-party declarations → delivered by `apply.sh`),
+> repo tooling (`scripts/`, `bootstrap/tests/`), docs, or the marketplace
+> *listing* `description` in `.claude-plugin/marketplace.json` (catalog metadata,
+> surfaced by a marketplace refresh, not by the plugin version). Follow SemVer:
+> **patch** for a fix or wording change inside an existing skill, **minor** for a
+> new skill or MCP server, **major** for a breaking change to (or removal of) a
+> skill's interface. Bump it in the same commit as the content change, before the
+> `/plugin update`.
+
 ### 2a. A personal skill
 
 1. Create `plugins/jiechao-toolkit/skills/<name>/SKILL.md` with valid frontmatter:
@@ -127,7 +142,8 @@ comment so you can update it.
    ...skill body...
    ```
 
-2. Push, then `/plugin update jiechao-toolkit`.
+2. Bump `plugin.json` `version` (minor for a new skill; see the callout above),
+   push, then `/plugin update jiechao-toolkit`.
 
 ### 2b. A personal subagent
 
@@ -176,7 +192,8 @@ Personal MCP can live **right in the plugin**. Add/extend
 ```
 
 Bundle any server code under the plugin (e.g. `plugins/jiechao-toolkit/mcp/`).
-Push, then `/plugin update jiechao-toolkit`.
+Bump `plugin.json` `version` (minor for a new server), push, then
+`/plugin update jiechao-toolkit`.
 
 ### 2e. Settings, permissions, or statusline
 
