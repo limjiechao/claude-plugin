@@ -7,7 +7,7 @@
     {
       "name": "jiechao-toolkit",
       "source": "./plugins/jiechao-toolkit",
-      "description": "Personal authored skills (ansi-color-piping, cross-platform-tests, ink-useinput-bind, no-barrel-files, package-public-api, ssr-client-divergence, tailwind-css-v4-usage, validating-stale-worktrees, vertical-code-structure)",
+      "description": "Personal authored skills — TypeScript/React patterns, cross-platform & Ink testing, git hygiene, and architecture practices.",
       "category": "productivity"
     }
   ]
