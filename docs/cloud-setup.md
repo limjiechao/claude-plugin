@@ -15,11 +15,13 @@ In **claude.ai/code → your environment → settings → Setup script**, add:
 set -euo pipefail
 REPO="$HOME/claude-plugin"
 if [ -d "$REPO/.git" ]; then
-  git -C "$REPO" pull --ff-only
+  git -C "$REPO" fetch --depth 1 origin
+  git -C "$REPO" reset --hard origin/HEAD
+  git -C "$REPO" clean -fdx
 else
-  git clone https://github.com/limjiechao/claude-plugin.git "$REPO"
+  git clone --depth 1 https://github.com/limjiechao/claude-plugin.git "$REPO"
 fi
-"$REPO/bootstrap/apply.sh"
+bash "$REPO/bootstrap/apply.sh"
 ```
 
 That's it — full tooling (plugin + third-party plugins + skills + agents + guard hooks
