@@ -25,7 +25,7 @@ Distributed as a normal Claude plugin through the marketplace declared in
 ```
 plugins/jiechao-toolkit/
 ├── .claude-plugin/plugin.json   # name, version, description
-├── skills/<name>/SKILL.md       # 9 authored skills
+├── skills/<name>/SKILL.md       # 14 authored skills
 └── .mcp.json                    # personal MCP servers (optional)
 ```
 
@@ -51,7 +51,7 @@ upstream updates, avoid forking someone else's code, and keep the repo clean.
 ```
 bootstrap/
 ├── manifest.json          # marketplaces to add + plugins to install (the 11)
-├── skills.lock.json       # third-party skills (34): source repo + skillPath
+├── skills.lock.json       # third-party skills (43): source repo + skillPath
 ├── settings.snippet.json  # portable settings to deep-merge
 ├── statusline.sh          # centralized statusline script
 ├── agents/<name>.md       # 6 subagents (hook paths tokenized as @@HOOKS_DIR@@)
@@ -112,17 +112,18 @@ are *merged* from the repo (Generated).
 
 ## Current inventory (snapshot at creation)
 
-- **Own skills (9, in the plugin):** ansi-color-piping, cross-platform-tests,
-  ink-useinput-bind, no-barrel-files, package-public-api, ssr-client-divergence,
-  tailwind-css-v4-usage, validating-stale-worktrees, vertical-code-structure.
-  (`cross-platform-tests-workspace` was iteration scratch — excluded.)
+- **Own skills (14, in the plugin):** ansi-color-piping, authoring-adrs,
+  capturing-commit-intent, cross-platform-tests, design-first-tracer-bullet,
+  ink-useinput-bind, no-barrel-files, package-public-api, reviewable-changes,
+  ssr-client-divergence, tailwind-css-v4-usage, theory-reconstruction,
+  validating-stale-worktrees, vertical-code-structure.
 - **Subagents (6, in bootstrap):** edit, git, node, python, research, shell.
 - **Hooks (4, in bootstrap):** git-guard, path-guard, runner-only, shell-guard.
 - **Third-party plugins (11):** frontend-design, superpowers, code-review,
   skill-creator, claude-code-setup, code-simplifier, claude-md-management,
   feature-dev, typescript-lsp, ralph-loop, commit-commands (all from
   `claude-plugins-official`).
-- **Third-party skills (34):** from GitHub repos (vercel-labs, millionco, etc.) +
+- **Third-party skills (43):** from GitHub repos (vercel-labs, millionco, etc.) +
   1 well-known (react-aria), enumerated in `bootstrap/skills.lock.json`.
 - **MCP:** none in file-based config at creation (the Google Drive MCP is
   account-managed by claude.ai and not portable via files).

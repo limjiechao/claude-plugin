@@ -41,7 +41,7 @@ truth** — the full decision (and when **not** to run `apply.sh` locally) lives
    ```jsonc
    {
      "marketplaces": [
-       { "name": "claude-plugins-official", "source": { "source": "github", "repo": "anthropics/claude-plugins-official" } }
+       { "name": "claude-plugins-official", "source": "anthropics/claude-plugins-official" }
        // add a new marketplace here if the plugin comes from one
      ],
      "plugins": [

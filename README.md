@@ -31,11 +31,11 @@ command to propagate. The full conceptual model (two layers, three buckets, and
 
 ```bash
 # 1. Add the marketplace (your own authored content) — in Claude Code:
-/plugin marketplace add jiechao/claude-plugin
+/plugin marketplace add limjiechao/claude-plugin
 /plugin install jiechao-toolkit
 
 # 2. Reconstruct third-party plugins/skills + agents/hooks + portable settings:
-git clone git@github.com:jiechao/claude-plugin.git
+git clone git@github.com:limjiechao/claude-plugin.git
 ./claude-plugin/bootstrap/apply.sh
 ```
 

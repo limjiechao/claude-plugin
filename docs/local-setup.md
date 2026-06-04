@@ -66,7 +66,7 @@ Two parts, matching the two layers.
 In Claude Code:
 
 ```
-/plugin marketplace add jiechao/claude-plugin
+/plugin marketplace add limjiechao/claude-plugin
 /plugin install jiechao-toolkit
 ```
 
@@ -75,7 +75,7 @@ This makes your authored skills, subagents, and hooks available.
 ### Part 2 — Layer B: third-party + portable settings
 
 ```bash
-git clone git@github.com:jiechao/claude-plugin.git
+git clone git@github.com:limjiechao/claude-plugin.git
 ./claude-plugin/bootstrap/apply.sh
 ```
 
