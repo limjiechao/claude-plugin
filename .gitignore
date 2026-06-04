@@ -2,6 +2,9 @@
 *.log
 /tmp/
 node_modules/
+# Python bytecode caches (generated when running bootstrap/ tests)
+__pycache__/
+*.py[cod]
 # scratch HOME used for install dry-runs
 /.scratch-home/
 # settings backups produced by install.sh (if ever run inside the repo)
