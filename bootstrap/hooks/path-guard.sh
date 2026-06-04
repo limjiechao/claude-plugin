@@ -51,6 +51,9 @@ done
 
 # Resolve relative targets against the project dir; prompt if the write lands
 # outside it (allows legit cross-repo edits with an explicit confirmation).
+# When no project dir is set we cannot bound the write, so any ABSOLUTE path
+# must be confirmed rather than silently allowed (the edit agent runs in
+# acceptEdits, so a fall-through allow would be a silent arbitrary write).
 if [ -n "${CLAUDE_PROJECT_DIR:-}" ]; then
   case "$target" in
     /*) abs="$target" ;;
@@ -59,6 +62,10 @@ if [ -n "${CLAUDE_PROJECT_DIR:-}" ]; then
   if [ "$abs" != "$CLAUDE_PROJECT_DIR" ] && [[ "$abs" != "$CLAUDE_PROJECT_DIR/"* ]]; then
     emit ask "path-guard: '$target' is outside the project directory — confirm the write"
   fi
+else
+  case "$target" in
+    /*) emit ask "path-guard: no project directory set — confirm the write to '$target'" ;;
+  esac
 fi
 
 emit allow "path-guard: target path permitted"

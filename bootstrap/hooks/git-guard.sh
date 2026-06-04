@@ -7,6 +7,10 @@
 set -euo pipefail
 cmd="$(jq -r '.tool_input.command // ""')"
 
+# Strip quoted spans (e.g. commit -m '...') before pattern-matching so a message
+# body containing words like "restore"/"clean"/"tag-d" can't trigger a block.
+scrubbed="$(printf '%s' "$cmd" | sed -E "s/'[^']*'//g; s/\"[^\"]*\"//g")"
+
 # Ignore non-Git commands so this can be installed as a global Bash hook.
 if ! grep -Eq '(^|&&|;|\|)[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*git([[:space:]]|$)' <<<"$cmd"; then
   exit 0
@@ -23,7 +27,9 @@ deny_patterns=(
   'reset[^&;|]*--keep'                           # can discard conflicted work
   'checkout[^&;|]*[[:space:]]--[[:space:]]'       # discard tracked file changes
   'checkout[^&;|]*[[:space:]]-[a-zA-Z]*f'         # force checkout
-  'restore([[:space:]]|$)'                        # discard tracked file changes
+  # NOTE: `restore` is handled by an anchored check after this loop (it is a bare
+  # word that also appears as a filename, so it can't live in this array).
+  'commit[^&;|]*--amend'                         # history rewrite of last commit (settings-deny parity)
   'tag[^&;|]*(-d|--delete)'                      # tag delete
   'update-ref[^&;|]*-d'                          # raw ref delete
   'reflog[^&;|]*(delete|expire)'                 # reflog destruction
@@ -32,11 +38,18 @@ deny_patterns=(
   'clean[^&;|]*-[a-zA-Z]*f'                      # delete untracked files
 )
 for p in "${deny_patterns[@]}"; do
-  if grep -Eq "git[^&;|]*${p}" <<<"$cmd"; then
+  if grep -Eq "git[^&;|]*${p}" <<<"$scrubbed"; then
     echo "git agent: blocked — '$cmd' matches forbidden pattern /$p/ (no force, no delete, no history rewrite)" >&2
     exit 2
   fi
 done
+
+# `restore` is a bare word that also appears as a filename; only block it when it
+# is the git subcommand (first non-flag token after `git`).
+if grep -Eq 'git([[:space:]]+-[^[:space:]]+)*[[:space:]]+restore([[:space:]]|$)' <<<"$scrubbed"; then
+  echo "git agent: blocked — 'git restore' discards tracked changes ($cmd)" >&2
+  exit 2
+fi
 
 # Protected branch pushes are never allowed from Claude Code. This catches the
 # common explicit forms; ambiguous `git push` falls through to an ask below.
@@ -45,7 +58,7 @@ protected_push_patterns=(
   'push[^&;|]*[[:space:]]origin[[:space:]]+([^[:space:]]+:)?(refs/heads/)?master([[:space:]]|$)'
 )
 for p in "${protected_push_patterns[@]}"; do
-  if grep -Eq "git[^&;|]*${p}" <<<"$cmd"; then
+  if grep -Eq "git[^&;|]*${p}" <<<"$scrubbed"; then
     echo "git-guard: blocked — Claude Code may not push to origin main/master ($cmd)" >&2
     exit 2
   fi
@@ -53,8 +66,8 @@ done
 
 # Ambiguous pushes may target the current upstream, which could be protected.
 # Force an explicit prompt; explicit feature-branch pushes are allowed below.
-if grep -Eq 'git[^&;|]*[[:space:]]push([[:space:]]|$)' <<<"$cmd"; then
-  if grep -Eq 'git[^&;|]*[[:space:]]push([[:space:]]+(-u|--set-upstream))?[[:space:]]+origin[[:space:]]+[^[:space:]-][^[:space:]]*([[:space:]]|$)' <<<"$cmd"; then
+if grep -Eq 'git[^&;|]*[[:space:]]push([[:space:]]|$)' <<<"$scrubbed"; then
+  if grep -Eq 'git[^&;|]*[[:space:]]push([[:space:]]+(-u|--set-upstream))?[[:space:]]+origin[[:space:]]+[^[:space:]-][^[:space:]]*([[:space:]]|$)' <<<"$scrubbed"; then
     jq -n --arg r "git-guard: explicit feature-branch push permitted" '{
       hookSpecificOutput: {
         hookEventName: "PreToolUse",
