@@ -87,7 +87,37 @@ test_settings_backups_pruned_to_latest_five() {
   [ ! -e "$tmp/claude/settings.json.bak.20260101010101" ] || fail "oldest backup was not pruned"
 }
 
+test_apply_is_idempotent() {
+  local tmp first second
+  tmp="$(make_fixture)"
+
+  CLAUDE_CONFIG_DIR="$tmp/claude" SKIP_PLUGINS=1 SKIP_SKILLS=1 "$REPO_ROOT/bootstrap/apply.sh" >/dev/null 2>&1
+  first="$(cat "$tmp/claude/settings.json")"
+
+  CLAUDE_CONFIG_DIR="$tmp/claude" SKIP_PLUGINS=1 SKIP_SKILLS=1 "$REPO_ROOT/bootstrap/apply.sh" >/dev/null 2>&1
+  second="$(cat "$tmp/claude/settings.json")"
+
+  [ "$first" = "$second" ] || fail "apply.sh is not idempotent: settings.json changed on the second run"
+}
+
+test_apply_preserves_user_keys() {
+  local tmp
+  tmp="$(make_fixture)"
+  printf '{"userKey":"keep","permissions":{"allow":["Bash(useronly:*)"]}}' > "$tmp/claude/settings.json"
+
+  CLAUDE_CONFIG_DIR="$tmp/claude" SKIP_PLUGINS=1 SKIP_SKILLS=1 "$REPO_ROOT/bootstrap/apply.sh" >/dev/null 2>&1
+
+  python3 - "$tmp/claude/settings.json" <<'PY' || fail "apply.sh clobbered user settings"
+import json, sys
+d = json.load(open(sys.argv[1]))
+assert d.get("userKey") == "keep", d
+assert "Bash(useronly:*)" in d["permissions"]["allow"], d["permissions"]["allow"]
+PY
+}
+
 test_own_plugin_install_failure_exits_nonzero
 test_cache_drift_compares_plugin_source_only
 test_settings_backups_pruned_to_latest_five
+test_apply_is_idempotent
+test_apply_preserves_user_keys
 printf 'PASS: bootstrap apply smoke tests\n'
