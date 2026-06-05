@@ -11,3 +11,17 @@ __pycache__/
 settings.json.bak.*
 # skill-development eval fixtures must not ship (contain machine paths, not runtime resources)
 plugins/*/skills/*/evals/
+# Runtime/account state must never be committed (CLAUDE.md invariant 4,
+# docs/architecture.md three-bucket model). Anchored to the repo root: these are
+# top-level ~/.claude account-state paths, so root-anchoring avoids clobbering
+# the tracked docs/superpowers/plans/ directory.
+/history.jsonl
+/projects/
+/sessions/
+/daemon*
+/telemetry/
+/ide/
+/shell-snapshots/
+/file-history/
+/plans/
+/tasks/
