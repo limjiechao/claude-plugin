@@ -2,6 +2,14 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **⚠️ Archival note (added 2026-06-05):** This historical plan describes files by
+> their pre-implementation names. Substitutions: `bootstrap/install.sh` →
+> `bootstrap/apply.sh`, `scripts/export.sh` → `scripts/capture.sh`,
+> `docs/adding-tools.md` → `docs/updating-plugin.md`, `docs/install.md` →
+> `docs/local-setup.md`. Subagents/hooks live in `bootstrap/agents/` and
+> `bootstrap/hooks/`, not the plugin. Current behavior: `CLAUDE.md`,
+> `docs/architecture.md`.
+
 **Goal:** Build `~/Documents/claude-plugin` — a public git repo that is the single source of truth for the owner's personal Claude tooling (skills, subagents, hooks, settings, third-party plugins/skills), reproducible locally and in Claude cloud sessions.
 
 **Architecture:** Two layers. **Layer A** is a Claude plugin (`jiechao-toolkit`) delivering the owner's 9 authored *skills* via a co-located marketplace. **Layer B** (`bootstrap/`) is a declarative set re-installed by an idempotent `install.sh`: third-party plugins (via `claude plugin` CLI), third-party skills (clone/fetch + copy), the 6 subagents + 4 guard hooks (copied into `~/.claude` because **plugin-bundled subagents ignore `hooks`/`permissionMode`**), and portable settings incl. a centralized statusline (deep-merged).
