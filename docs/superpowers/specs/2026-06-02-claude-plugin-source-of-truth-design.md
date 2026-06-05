@@ -4,6 +4,17 @@
 **Status:** Approved design, pending implementation plan
 **Owner:** jiechao
 
+> **⚠️ Archival note (added 2026-06-05):** This document records the original
+> design intent; the implementation diverged in naming. Read these substitutions
+> when following any command or path below:
+> `bootstrap/install.sh` → `bootstrap/apply.sh`,
+> `scripts/export.sh` → `scripts/capture.sh`,
+> `docs/adding-tools.md` → `docs/updating-plugin.md`,
+> `docs/install.md` → `docs/local-setup.md`.
+> Also: the owner's subagents and guard hooks ship in `bootstrap/agents/` and
+> `bootstrap/hooks/` (Layer B), **not** inside the plugin. For current behavior
+> see `CLAUDE.md` and `docs/architecture.md`.
+
 ## Problem
 
 Personal Claude Code tooling (skills, subagents, hooks, settings, and installed
