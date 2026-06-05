@@ -67,8 +67,16 @@ def _load_json(path: Path, default: Any) -> Any:
 
 
 def _write_json(path: Path, value: Any) -> None:
-    with path.open("w") as file:
-        json.dump(value, file, indent=2)
+    # Write to a sibling temp file and atomically replace, so an interrupted or
+    # failed serialization never leaves a truncated/corrupt target behind.
+    tmp = path.with_name(path.name + ".tmp")
+    try:
+        with tmp.open("w") as file:
+            json.dump(value, file, indent=2)
+        tmp.replace(path)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
 
 
 def reconcile_settings_file(

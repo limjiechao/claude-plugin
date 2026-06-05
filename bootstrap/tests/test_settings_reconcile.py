@@ -121,6 +121,23 @@ class SettingsReconcileTests(unittest.TestCase):
             self.assertEqual(merged["statusLine"], {"type": "command", "command": "bash /tmp/claude/statusline.sh"})
             self.assertEqual(json.loads(last.read_text()), json.loads(snippet.read_text()))
 
+    def test_write_failure_preserves_original_file(self):
+        from bootstrap import settings_reconcile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"keep": True}))
+
+            class Unserializable:
+                pass
+
+            with self.assertRaises(TypeError):
+                settings_reconcile._write_json(target, {"bad": Unserializable()})
+
+            # original must be intact (not truncated) and no temp file left behind
+            self.assertEqual(json.loads(target.read_text()), {"keep": True})
+            self.assertEqual(list(Path(tmp).glob("*.tmp")), [])
+
 
 if __name__ == "__main__":
     unittest.main()
