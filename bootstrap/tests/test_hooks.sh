@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 H="$REPO_ROOT/bootstrap/hooks"
 fails=0
@@ -8,7 +8,11 @@ fail() { printf 'FAIL: %s\n' "$*" >&2; fails=$((fails+1)); }
 # decision <hook> <json> -> prints "block"(exit2) | the permissionDecision | "allow-bare"
 decision() {
   local hook="$1" json="$2" out rc
+  # Hooks legitimately exit 2 (block); shield that one call from errexit so the
+  # rest of the script still benefits from set -e catching real infra failures.
+  set +e
   out="$(printf '%s' "$json" | bash "$H/$hook" 2>/dev/null)"; rc=$?
+  set -e
   if [ "$rc" -eq 2 ]; then echo "block"; return; fi
   printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecision // "allow-bare"'
 }
