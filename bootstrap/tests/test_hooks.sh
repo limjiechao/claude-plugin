@@ -35,6 +35,12 @@ done
 [ "$(decision shell-guard.sh '{"tool_input":{"command":"cat README.md"}}')" = "allow" ] \
   || fail "shell-guard blocked a benign read"
 
+# shell-guard: long-form recursive/force deletes blocked (parity with short flags)
+for bad in 'rm --recursive /tmp/zzz' 'rm --force /tmp/zzz' 'rm -r --force /tmp/zzz'; do
+  [ "$(decision shell-guard.sh "$(jq -nc --arg c "$bad" '{tool_input:{command:$c}}')")" = "block" ] \
+    || fail "shell-guard allowed long-form destructive rm: $bad"
+done
+
 # git-guard: false positives now allowed; real destructive still blocked
 for ok in "git add restore" "git add restore foo.py" "git commit -m 'clean up restore logic'" "git commit -m 'tag-d release'"; do
   d="$(decision git-guard.sh "$(jq -nc --arg c "$ok" '{tool_input:{command:$c}}')")"

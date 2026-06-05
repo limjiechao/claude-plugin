@@ -94,6 +94,8 @@
       "Bash(rm -fr:*)",
       "Bash(rm -r:*)",
       "Bash(rm -f:*)",
+      "Bash(rm --recursive:*)",
+      "Bash(rm --force:*)",
       "Bash(dd:*)",
       "Bash(mkfs:*)",
       "Bash(mount:*)",
