@@ -95,6 +95,9 @@ def reconcile_settings_file(
     old_snippet = _replace_tokens(old_snippet_raw, claude_dir=claude_dir, hooks_dir=hooks_dir)
 
     merged = _reconcile(base, old_snippet, new_snippet)
+    # statusLine is centrally owned: force it from the runtime claude_dir,
+    # ignoring whatever the snippet carries (the snippet uses @@CLAUDE_DIR@@ only
+    # for portability/round-trip fidelity, not as the installed value).
     merged["statusLine"] = {"type": "command", "command": f"bash {claude_dir}/statusline.sh"}
 
     _write_json(settings_path, merged)
