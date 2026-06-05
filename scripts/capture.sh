@@ -37,7 +37,7 @@ for af in "$REPO_ROOT/bootstrap/agents"/*.md; do
   [ -e "$af" ] || continue
   a="$(basename "$af" .md)"
   [ -f "$CLAUDE_DIR/agents/$a.md" ] || continue
-  sed "s#$CLAUDE_DIR/hooks#@@HOOKS_DIR@@#g; s#/Users/[^/]*/.claude/hooks#@@HOOKS_DIR@@#g" \
+  sed "s#$CLAUDE_DIR/hooks#@@HOOKS_DIR@@#g; s#/Users/[^/]*/.claude/hooks#@@HOOKS_DIR@@#g; s#/home/[^/]*/\.claude/hooks#@@HOOKS_DIR@@#g" \
       "$CLAUDE_DIR/agents/$a.md" > "$REPO_ROOT/bootstrap/agents/$a.md"
 done
 for h in git-guard path-guard runner-only shell-guard; do
