@@ -26,6 +26,8 @@ deny_patterns=(
 
   # High-value destructive gaps (balanced — plain kill/curl/launchctl still work).
   'rm[[:space:]]+-[a-zA-Z]*r[a-zA-Z]*[[:space:]]'                                           # rm -r <dir> (recursive)
+  'rm[[:space:]]+[^|&;]*--recursive'                                                        # rm --recursive (GNU long flag)
+  'rm[[:space:]]+[^|&;]*--force'                                                            # rm --force (GNU long flag)
   '(^|[^a-zA-Z])(pkill|killall)([[:space:]]|$)'                                             # name-based mass kill
   'kill[[:space:]]+-(9|KILL)([[:space:]]|$)'                                                # SIGKILL (plain kill <pid> ok)
   'crontab[[:space:]]+[^|&;]*-r'                                                            # wipe crontab
