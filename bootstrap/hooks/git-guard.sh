@@ -19,6 +19,7 @@ fi
 # Destructive patterns — block regardless of flag order.
 deny_patterns=(
   'push[^&;|]*(--force|-f|--force-with-lease)'   # force push
+  'push[^&;|]*--mirror'                          # mirror push overwrites ALL remote refs
   'push[^&;|]*--delete'                          # remote ref delete
   'push[^&;|]*[[:space:]]:'                      # push :branch (delete refspec)
   'branch[^&;|]*(-d|-D|--delete)'                # branch delete
@@ -90,6 +91,9 @@ fi
 
 # Allowed: emit an explicit allow decision so the command runs even under
 # `permissionMode: dontAsk` (a bare `exit 0` would fall through and be denied).
+# CONTRACT: because this allow overrides settings.json deny rules, every
+# destructive git op MUST be covered by deny_patterns above — do not rely on
+# the settings deny-list as the only line of defense for the git agent.
 jq -n --arg r "git-guard: local git op permitted" '{
   hookSpecificOutput: {
     hookEventName: "PreToolUse",

@@ -46,7 +46,7 @@ for ok in "git add restore" "git add restore foo.py" "git commit -m 'clean up re
   d="$(decision git-guard.sh "$(jq -nc --arg c "$ok" '{tool_input:{command:$c}}')")"
   [ "$d" != "block" ] || fail "git-guard false-positive blocked: $ok"
 done
-for bad in "git restore foo.py" "git reset --hard" "git push --force origin x" "git commit --amend --no-edit" "git branch -D feat"; do
+for bad in "git restore foo.py" "git reset --hard" "git push --force origin x" "git commit --amend --no-edit" "git branch -D feat" "git push --mirror origin"; do
   [ "$(decision git-guard.sh "$(jq -nc --arg c "$bad" '{tool_input:{command:$c}}')")" = "block" ] \
     || fail "git-guard allowed destructive: $bad"
 done
