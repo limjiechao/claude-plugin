@@ -44,4 +44,8 @@ grep -q '@@HOOKS_DIR@@/runner-only.sh' "$scratch_repo/bootstrap/agents/node.md" 
 python3 -c "import json;d=json.load(open('$scratch_repo/bootstrap/settings.snippet.json'));assert 'hooks' in d, 'hooks dropped';assert d['hooks']['PreToolUse'][0]['hooks'][0]['command']=='@@HOOKS_DIR@@/git-guard.sh', d" \
   || fail "snippet hooks missing or not tokenized"
 
+# 3b) Snippet statusline path re-tokenized (not an absolute machine path).
+python3 -c "import json;d=json.load(open('$scratch_repo/bootstrap/settings.snippet.json'));assert d['statusLine']['command']=='bash @@CLAUDE_DIR@@/statusline.sh', d.get('statusLine')" \
+  || fail "snippet statusline path not tokenized"
+
 printf 'PASS: capture fidelity\n'

@@ -64,6 +64,9 @@ cd = os.environ["CLAUDE_DIR"].rstrip("/")
 text = text.replace(cd + "/hooks", "@@HOOKS_DIR@@")
 text = re.sub(r"/Users/[^/\"]+/\.claude/hooks", "@@HOOKS_DIR@@", text)
 text = re.sub(r"/home/[^/\"]+/\.claude/hooks", "@@HOOKS_DIR@@", text)
+text = text.replace(cd + "/statusline.sh", "@@CLAUDE_DIR@@/statusline.sh")
+text = re.sub(r"/Users/[^/\"]+/\.claude/statusline\.sh", "@@CLAUDE_DIR@@/statusline.sh", text)
+text = re.sub(r"/home/[^/\"]+/\.claude/statusline\.sh", "@@CLAUDE_DIR@@/statusline.sh", text)
 open(os.environ["OUT"], "w").write(text)
 PY
 fi
