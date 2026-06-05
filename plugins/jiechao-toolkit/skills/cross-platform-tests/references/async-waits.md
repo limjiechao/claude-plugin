@@ -38,8 +38,7 @@ export async function waitFor<T>(
   let lastError: unknown
   for (;;) {
     try {
-      const value = await predicate()
-      if (value !== undefined && value !== false) return value
+      return await predicate()
     } catch (error) {
       lastError = error
     }
