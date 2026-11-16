@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "jiechao-toolkit",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "jiechao personal authored skills",
   "author": { "name": "jiechao", "email": "jiechao.lim@gmail.com" }
 }
