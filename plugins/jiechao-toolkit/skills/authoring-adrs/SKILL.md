@@ -60,6 +60,12 @@ human whether this rises to ADR-worthy rather than defaulting to yes.
     ## Decision
     "We will <decision>." Active voice, present tense. State what was chosen.
 
+    ## Not prescribed
+    What this decision deliberately leaves open for implementers to choose.
+    Define it as carefully as what is prescribed (Brooks, MM-M prop. 6.2):
+    without it, implementers either ask about everything or quietly decide
+    things the decision meant to hold. Write "nothing" only if that is true.
+
     ## Alternatives considered
     The real options that were on the table, and the specific reason each was
     rejected. This section is the most valuable and the most often skipped —
@@ -69,6 +75,12 @@ human whether this rises to ADR-worthy rather than defaulting to yes.
     What becomes easier, what becomes harder, what new constraint this imposes.
     Include the costs, not just the benefits. An ADR with only upsides is
     incomplete.
+
+**Status meanings.** `Proposed` is readable but not binding: anyone may read
+it, and no code may be built on it, because a tentative decision written down
+is better than one that lives only in a head (Cosgrove, in MM-M prop. 11.14).
+`Accepted` binds. A project may require that only a named owner moves an ADR
+from Proposed to Accepted; follow its house rule.
 
 ## Compact alternative (Y-statement)
 
