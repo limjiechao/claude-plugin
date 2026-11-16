@@ -112,10 +112,10 @@ are *merged* from the repo (Generated).
 
 ## Current inventory (snapshot at creation)
 
-- **Own skills (14, in the plugin):** ansi-color-piping, authoring-adrs,
+- **Own skills (15, in the plugin):** ansi-color-piping, authoring-adrs,
   capturing-commit-intent, cross-platform-tests, design-first-tracer-bullet,
   ink-useinput-bind, no-barrel-files, package-public-api, reviewable-changes,
-  ssr-client-divergence, tailwind-css-v4-usage, theory-reconstruction,
+  spec-audit, ssr-client-divergence, tailwind-css-v4-usage, theory-reconstruction,
   validating-stale-worktrees, vertical-code-structure.
 - **Subagents (6, in bootstrap):** edit, git, node, python, research, shell.
 - **Hooks (4, in bootstrap):** git-guard, path-guard, runner-only, shell-guard.
